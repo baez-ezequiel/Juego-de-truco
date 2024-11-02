@@ -21,6 +21,7 @@ int validar_opcion(int carta_tirada);
 int evitar_doble_carta_jugador(int carta);
 int evitar_doble_carta_computadora();
 int turno_jugador();
+
 // Funcion principal
 int main() {
     srand(time(0));
@@ -34,16 +35,17 @@ int main() {
     return 0;
 }
 
+// Genera la mano del jugador y de la computadora y lo guarda en la memoria
 void repartir() {
     int carta, palo, numero;
 
     // Reparte la mano de la computadora
     for (int i = 0; i < 3; i++) {
         do {
-            palo = rand() % 4; 
-            numero = rand() % 10;
-            carta = palo * 10 + numero;
-        } while (!unica(carta));
+            palo = rand() % 4; // Genera el palo de la carta
+            numero = rand() % 10; // Genera el numero de la carta
+            carta = palo * 10 + numero; // Genera la posicion de la carta en el vector (1 a 40)
+        } while (!unica(carta)); // No se puede repetir ninguna carta
         
         mano_computadora[i] = carta;
     }
@@ -52,11 +54,12 @@ void repartir() {
     printf("\nMano del jugador:\n");
     for (int i = 0; i < 3; i++) {
         do {
-            palo = rand() % 4;
-            numero = rand() % 10;
-            carta = palo * 10 + numero;
-        } while (!unica(carta));
+            palo = rand() % 4; // Genera el palo de la carta
+            numero = rand() % 10; // Genera el numero de la carta
+            carta = palo * 10 + numero; // Genera la posicion de la carta en el vector (1 a 40)
+        } while (!unica(carta)); // No se puede repetir nunguna carta
         
+        // Muestra la mano del jugador en pantalla
         mano_jugador[i] = carta;
         printf("Carta %d: %d de %s\n", i + 1, numeros[numero], palos[palo]);
     }
@@ -68,7 +71,9 @@ void juego() {
     int punto_mano_jugador, punto_mano_computadora; // Puntos en cada mano
     int carta_computadora, carta_jugador; // Carta de cada jugador
     int carta_tirada; // Carta que tira el jugador
+    int indice_carta_computadora;
 
+    // Ciclo para jugar hasta que uno de los dos llegue a 15 puntos
     while (punto_computadora < 15 && punto_jugador < 15) {
         // Reiniciamos los puntos de la mano
         punto_mano_jugador = 0;
@@ -83,7 +88,7 @@ void juego() {
         conocer_carta(carta_jugador);
 
         // Computadora responde al jugador
-        int indice_carta_computadora = evitar_doble_carta_computadora();
+        indice_carta_computadora = evitar_doble_carta_computadora();
         carta_computadora = mano_computadora[indice_carta_computadora];
 
         // Mostrar carta de la computadora
@@ -92,22 +97,21 @@ void juego() {
 
         // Definir ganador de la mano
         if (valor_baraja[carta_computadora] < valor_baraja[carta_jugador]) {
-            printf("\nLa computadora gana esta mano\n");
+            printf("\n- La computadora gana esta mano\n");
             punto_mano_computadora++;
         } else if (valor_baraja[carta_jugador] < valor_baraja[carta_computadora]) {
-            printf("\nEl jugador gana esta mano\n");
+            printf("\n- El jugador gana esta mano\n");
             punto_mano_jugador++;
         } else {
-            printf("\nEmpate en esta mano\n");
+            printf("\n- Empate en esta mano\n");
         }
 
         // Cambiar valores para no repetir cartas
         mano_computadora[indice_carta_computadora] = -1;
         mano_jugador[carta_tirada] = -1;
-
+        
         //! Esta es la segunda mano
-        //TODO: Si el jugador gana la primera mano, vuelve a tirar
-        if (punto_mano_jugador > punto_mano_computadora) {
+        if (punto_mano_jugador > punto_mano_computadora) { //TODO: Si el jugador gana la primera mano, vuelve a tirar
             // El jugador elige su carta
             carta_tirada = turno_jugador();
             carta_jugador = mano_jugador[carta_tirada];
@@ -117,7 +121,7 @@ void juego() {
             conocer_carta(carta_jugador);
                 
             // Luego de tirar el jugador, es el turno de la computadora
-            int indice_carta_computadora = evitar_doble_carta_computadora();
+            indice_carta_computadora = evitar_doble_carta_computadora();
             carta_computadora = mano_computadora[indice_carta_computadora];
 
             // Mostrar carta de la computadora
@@ -126,18 +130,18 @@ void juego() {
 
             // Definir al ganador de la mano
             if (valor_baraja[carta_computadora] < valor_baraja[carta_jugador]) {
-                printf("\nLa computadora gana esta mano\n");
+                printf("\n- La computadora gana esta mano\n");
                 punto_mano_computadora++;
             } else if (valor_baraja[carta_jugador] < valor_baraja[carta_computadora]) {
-                printf("\nEl jugador gana esta mano\n");
+                printf("\n- El jugador gana esta mano\n");
                 punto_mano_jugador++;
             } else {
-                printf("\nEmpate en esta mano\n");
+                printf("\n- Empate en esta mano\n");
             }
-        } //TODO: Si la computadora gana la primera mano, vuelve a tirar
-        else if (punto_mano_computadora > punto_mano_jugador){
+        } 
+        else if (punto_mano_computadora > punto_mano_jugador){ //TODO: Si la computadora gana la primera mano, vuelve a tirar
             // Como gano la computadora, vuelve a tirar
-            int indice_carta_computadora = evitar_doble_carta_computadora();
+            indice_carta_computadora = evitar_doble_carta_computadora();
             carta_computadora = mano_computadora[indice_carta_computadora];
 
             // Mostrar carta de la computadora
@@ -154,16 +158,16 @@ void juego() {
                 
             // Definir al ganador de la mano
             if (valor_baraja[carta_computadora] < valor_baraja[carta_jugador]) {
-                printf("\nLa computadora gana esta mano\n");
+                printf("\n- La computadora gana esta mano\n");
                 punto_mano_computadora++;
             } else if (valor_baraja[carta_jugador] < valor_baraja[carta_computadora]) {
-                printf("\nEl jugador gana esta mano\n");
+                printf("\n- El jugador gana esta mano\n");
                 punto_mano_jugador++;
             } else {
-                printf("\nEmpate en esta mano\n");
+                printf("\n- Empate en esta mano\n");
             }
-        }// Si hay un empate en segunda ronda
-        else {
+        }
+        else { // Si hay un empate en segunda ronda
             // El jugador elige su carta
             carta_tirada = turno_jugador();
             carta_jugador = mano_jugador[carta_tirada];
@@ -173,7 +177,7 @@ void juego() {
             conocer_carta(carta_jugador);
                 
             // Luego de tirar el jugador, es el turno de la computadora
-            int indice_carta_computadora = evitar_doble_carta_computadora();
+            indice_carta_computadora = evitar_doble_carta_computadora();
             carta_computadora = mano_computadora[indice_carta_computadora];
 
             // Mostrar carta de la computadora
@@ -182,13 +186,13 @@ void juego() {
 
             // Definir al ganador de la mano
             if (valor_baraja[carta_computadora] < valor_baraja[carta_jugador]) {
-                printf("\nLa computadora gana esta mano\n");
+                printf("\n- La computadora gana esta mano\n");
                 punto_mano_computadora += 3;
             } else if (valor_baraja[carta_jugador] < valor_baraja[carta_computadora]) {
-                printf("\nEl jugador gana esta mano\n");
+                printf("\n- El jugador gana esta mano\n");
                 punto_mano_jugador += 3;
             } else {
-                printf("\nEmpate en esta mano\n");
+                printf("\n- Empate en esta mano\n");
             }
         }
 
@@ -208,7 +212,7 @@ void juego() {
             conocer_carta(carta_jugador);
                 
             // Luego de tirar el jugador, es el turno de la computadora
-            int indice_carta_computadora = evitar_doble_carta_computadora();
+            indice_carta_computadora = evitar_doble_carta_computadora();
             carta_computadora = mano_computadora[indice_carta_computadora];
 
             // Mostrar carta de la computadora
@@ -217,18 +221,18 @@ void juego() {
 
             // Definir al ganador de la mano
             if (valor_baraja[carta_computadora] < valor_baraja[carta_jugador]) {
-                printf("\nLa computadora gana esta mano\n");
+                printf("\n- La computadora gana esta mano\n");
                 punto_mano_computadora++;
             } else if (valor_baraja[carta_jugador] < valor_baraja[carta_computadora]) {
-                printf("\nEl jugador gana esta mano\n");
+                printf("\n- El jugador gana esta mano\n");
                 punto_mano_jugador++;
             } else {
-                printf("\nEmpate en esta mano\n");
+                printf("\n- Empate en esta mano\n");
             }
         } //TODO: La computadora gana la segunda mano
         else if (punto_mano_computadora > punto_mano_jugador){
             // Como gano la computadora, vuelve a tirar
-            int indice_carta_computadora = evitar_doble_carta_computadora();
+            indice_carta_computadora = evitar_doble_carta_computadora();
             carta_computadora = mano_computadora[indice_carta_computadora];
 
             // Mostrar carta de la computadora
@@ -245,13 +249,13 @@ void juego() {
                 
             // Definir al ganador de la mano
             if (valor_baraja[carta_computadora] < valor_baraja[carta_jugador]) {
-                printf("\nLa computadora gana esta mano\n");
+                printf("\n- La computadora gana esta mano\n");
                 punto_mano_computadora++;
             } else if (valor_baraja[carta_jugador] < valor_baraja[carta_computadora]) {
-                printf("\nEl jugador gana esta mano\n");
+                printf("\n- El jugador gana esta mano\n");
                 punto_mano_jugador++;
             } else {
-                printf("\nEmpate en esta mano\n");
+                printf("\n- Empate en esta mano\n");
             }
         } else {
             carta_tirada = turno_jugador();
@@ -262,7 +266,7 @@ void juego() {
             conocer_carta(carta_jugador);
                 
             // Luego de tirar el jugador, es el turno de la computadora
-            int indice_carta_computadora = evitar_doble_carta_computadora();
+            indice_carta_computadora = evitar_doble_carta_computadora();
             carta_computadora = mano_computadora[indice_carta_computadora];
 
             // Mostrar carta de la computadora
@@ -271,13 +275,13 @@ void juego() {
 
             // Definir al ganador de la mano
             if (valor_baraja[carta_computadora] < valor_baraja[carta_jugador]) {
-                printf("\nLa computadora gana esta mano\n");
+                printf("\n- La computadora gana esta mano\n");
                 punto_mano_computadora++;
             } else if (valor_baraja[carta_jugador] < valor_baraja[carta_computadora]) {
-                printf("\nEl jugador gana esta mano\n");
+                printf("\n- El jugador gana esta mano\n");
                 punto_mano_jugador++;
             } else {
-                printf("\nEmpate en esta mano\n");
+                printf("\n- Empate en esta mano\n");
             }
         }
 
@@ -285,12 +289,12 @@ void juego() {
     // Determinar el ganador de la ronda
     if (punto_mano_computadora > punto_mano_jugador) {
         punto_computadora++;
-        printf("\nLa computadora gana la ronda\n");
+        printf("\n* La computadora gana la ronda\n");
     } else if (punto_mano_jugador > punto_mano_computadora) {
         punto_jugador++;
-        printf("\nEl jugador gana la ronda\n");
+        printf("\n* El jugador gana la ronda\n");
     } else {
-        printf("\nEmpate en la ronda\n");
+        printf("\n* Empate en la ronda\n");
     }
 
     // Mostrar puntos acumulados
@@ -312,7 +316,6 @@ void juego() {
         printf("\nLa computadora ha ganado la partida.\n");
     }
 }
-
 
 int unica(int carta) {
     if (baraja[carta] == 1) {
@@ -371,3 +374,7 @@ int turno_jugador() {
 
     return carta_tirada;
 }
+
+//! Implementar la funcion truco
+
+//! Implementar la funcion envido
