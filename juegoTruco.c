@@ -21,6 +21,8 @@ int validar_opcion(int carta_tirada);
 int evitar_doble_carta_jugador(int carta);
 int evitar_doble_carta_computadora();
 int turno_jugador();
+int validar_truco(int opcion);
+int respuestas_truco(int respuesta);
 
 // Funcion principal
 int main() {
@@ -71,7 +73,9 @@ void juego() {
     int punto_mano_jugador, punto_mano_computadora; // Puntos en cada mano
     int carta_computadora, carta_jugador; // Carta de cada jugador
     int carta_tirada; // Carta que tira el jugador
-    int indice_carta_computadora;
+    int indice_carta_computadora; // La computadora tira una carta aleatoria de su mano
+    int bandera_truco = 0, cantar_truco = 0; // Bandera para saber si se canto truco en algun momento
+    int respuesta_compu;
 
     // Ciclo para jugar hasta que uno de los dos llegue a 15 puntos
     while (punto_computadora < 15 && punto_jugador < 15) {
@@ -80,6 +84,14 @@ void juego() {
         punto_mano_computadora = 0;
 
         //! Primera mano, empieza el jugador
+        printf("\nDesea cantar truco? (0: no cantar, 1: cantar): ");
+        cantar_truco = validar_truco(cantar_truco);
+        
+        // El sistema reconoce que se a cantado truco
+        if (cantar_truco == 1) {
+            bandera_truco = 1;
+        }
+
         carta_tirada = turno_jugador(); // La funcion lee la carta tirada por el jugador
         carta_jugador = mano_jugador[carta_tirada]; // Se juega la carta elegida por el jugador
 
@@ -87,7 +99,17 @@ void juego() {
         printf("Carta tirada por el jugador: ");
         conocer_carta(carta_jugador);
 
-        // Computadora responde al jugador
+        // La computadora responde al canto del jugador
+        if (bandera_truco == 1) {
+            respuesta_compu = rand() % 2; // 0 rechaza el truco, 1 acepta el truco
+        }
+
+        if (respuesta_compu == 0) {
+            printf("La computadora rechaza el truco.\n");
+        } else {
+            printf("Quiero el truco\n");
+        }
+        // Computadora responde la carta del jugador
         indice_carta_computadora = evitar_doble_carta_computadora();
         carta_computadora = mano_computadora[indice_carta_computadora];
 
@@ -214,7 +236,7 @@ void juego() {
             // Luego de tirar el jugador, es el turno de la computadora
             indice_carta_computadora = evitar_doble_carta_computadora();
             carta_computadora = mano_computadora[indice_carta_computadora];
-
+            
             // Mostrar carta de la computadora
             printf("Carta tirada por la computadora: ");
             conocer_carta(carta_computadora);
@@ -375,6 +397,13 @@ int turno_jugador() {
     return carta_tirada;
 }
 
-//! Implementar la funcion truco
+int validar_truco(int opcion) {
+    do {
+        scanf("%d", &opcion);
+        if (opcion < 0 || opcion > 1) {
+            printf("Entrada inválida. Ingrese 0 para cantar o 1 para no cantar: ");
+        }
+    } while (opcion < 0 || opcion > 1);
 
-//! Implementar la funcion envido
+    return opcion;
+}
