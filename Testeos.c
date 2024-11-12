@@ -177,6 +177,7 @@ void juego() {
         // Reiniciar valores de variables
         bandera_truco = 0;
         bandera_puntos = 0;
+        bandera_puntos = 1; // Restablecer puntos básicos para la siguiente ronda
         rondas_jugadas++;
 
             // Muestra el resultado final del juego
@@ -435,20 +436,18 @@ void respuesta_valeCuatro_jugador() {
 
 // Se asigna el punto dependiendo de en que instancia del truco se este
 int puntos_truco() {
-    int puntos;
+    int puntos = 1; // Valor por defecto si bandera_puntos es 0
     switch (bandera_puntos) {
-    case 0:
-        puntos = 1;
-        break;
-    case 2: // Se dijo quiero al truco
-        puntos = 2;
-        break;
-    case 3: // Se dijo quiero al retruco
-        puntos = 3;
-        break;
-    case 4: // Se dijo quiero al vale cuatro
-        puntos = 4;
-        break;
+        case 2: // Se dijo quiero al truco
+            puntos = 2;
+            break;
+        case 3: // Se dijo quiero al retruco
+            puntos = 3;
+            break;
+        case 4: // Se dijo quiero al vale cuatro
+            puntos = 4;
+            break;
     }
     return puntos;
 }
+
