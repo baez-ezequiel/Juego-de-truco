@@ -11,7 +11,6 @@ int mano_jugador[3] = {0}; // Cartas del jugador
 // Se define el valor de las cartas según las reglas del truco
 int valor_baraja[40] = {7,6,5,14,13,12,4,10,9,8,7,6,5,14,13,12,11,10,9,8,2,6,5,14,13,12,11,10,9,8,1,6,5,14,13,12,3,10,9,8};
 
-
 void repartir(); // Funcion que reparte las cartas al jugador y a la computadora
 void juego(); // Simula el juego de truco
 void reiniciar_baraja(); // Permite que siempre esten disponibles las 40 cartas de la baraja
@@ -24,21 +23,25 @@ int turno_jugador(); // Simula el turno del jugador y le permite tirar la carta
 int turno_computadora(); // Simula el turno de la computadora y le permite tirar la carta
 int determinar_ganador_mano(int carta_jugador, int carta_computadora); // Determina quien gana la mano
 
+//* Variables globales
+int puntos_jugador = 0;
+int puntos_computadora = 0;
+
 //! Funciones y variables relacionadas a cantar truco
-int bandera_truco = 0; // Sirve para saber si se canto truco en algun momento de la partida
-int bandera_truco_compu; // Sirve para saber si la computadora acepta o rechaza el truco
-int bandera_truco_jugador; // Sirve para saber si el jugador acepta o rechaza el truco
+int bandera_truco = 0; // Sirve para saber si se canta truco y analizar las posibles respuestas
+int bandera_puntos = 0; // Sirve para saber cuantos puntos dar cuando se responde No quiero al truco
 
 int validar_canto(int cantar); // Se valida el numero que ingresa el jugador para que este en el rango
+int puntos_truco(); // Dependiendo del estado de truco asigna los puntos
 void cantar_truco_jugador(); // Preguntamos al jugador si quiere cantar truco
-void cantar_truco_computadora(); // Preguntamos a la computadora si quiere cantar truco
-int respuesta_truco_compu(); // Preguntamos a la computadora si quiere responder al truco
-int respuesta_truco_jugador(); // El jugador debe responder al canto de la computadora
-int respuesta_retruco_jugador(); // El jugador responde dependiendo de la respuesta de la compu
-int respuesta_retruco_compu();
-int respuesta_valeCuatro_compu();
-int respuesta_valeCuatro_jugador();
-int puntos_truco();
+void respuesta_truco_compu();
+void respuesta_retruco_jugador();
+void respuesta_valeCuatro_compu();
+
+void cantar_truco_compu();
+void respuesta_truco_jugador();
+void respuesta_retruco_compu();
+void respuesta_valeCuatro_jugador();
 
 // Función principal
 int main() {
@@ -78,7 +81,7 @@ void repartir() {
 
 //! Ejecuta el flujo del juego de Truco hasta que alguno de los jugadores gane
 void juego() {
-    int puntos_computadora = 0, puntos_jugador = 0;
+    int rondas_jugadas = 1;
 
     while (puntos_computadora < 15 && puntos_jugador < 15) {
         int punto_mano_jugador = 0, punto_mano_computadora = 0; // Inicializa los puntos de la mano
@@ -87,38 +90,39 @@ void juego() {
         for (int ronda = 0; ronda < 3; ronda++) { // Se pueden jugar hasta 3 manos en una ronda
             int carta_jugador, carta_computadora, resultado;
             
-            cantar_truco_jugador(); // El jugador decide si canta truco o no
-            
+            printf("\nMano %d:", ronda + 1);
             if (turno == 1) { // Si el turno es del jugador
-                if (bandera_truco == 1) { // Significa que se canto truco
-                    respuesta_truco_compu(); // La compu debe responder
-                    bandera_truco = -1; // Evita que se cante truco en todas las manos
-
-                    if (bandera_truco_compu == 0) { // La compu rechaza el truco y termina la ronda
-                        puntos_jugador++;
+                if (bandera_truco == 0) { // Si todavia no se canta truco
+                    cantar_truco_jugador(); // El jugador elige si canta truco
+                    if (bandera_truco == 1) {
                         break;
-                    } else if (bandera_truco_compu == 2) { // Si la compu canta retruco
-                        respuesta_retruco_jugador(); // El jugador decide si acepta el retruco o no
-
-                        if (bandera_truco_jugador == 0) { // El jugador se nego al retruco
-                            puntos_computadora += 2;
-                            break;
-                        } else if (bandera_truco_jugador == 2){
-                            respuesta_valeCuatro_compu();
-
-                            if (bandera_truco_compu == 0){ // La compu se nego al vale 4
-                            puntos_jugador += 3;
-                                break;
-                            }
-                        }
-                    } 
+                    }
                 }
-                // Despues que se resuelve el truco, el jugador juega una carta
                 carta_jugador = turno_jugador();
+
+                if (bandera_truco == 0) { // Si todavia no se canta truco
+                    cantar_truco_compu(); // El jugador elige si canta truco
+                    if (bandera_truco == 1) {
+                        break;
+                    }
+                }
                 carta_computadora = turno_computadora();
 
             } else { // Turno de la computadora
+                if (bandera_truco == 0) { // Si todavia no se canta truco
+                    cantar_truco_compu(); // El jugador elige si canta truco
+                    if (bandera_truco == 1) {
+                        break;
+                    }
+                }
                 carta_computadora = turno_computadora();
+
+                if (bandera_truco == 0) { // Si todavia no se canta truco
+                    cantar_truco_jugador(); // El jugador elige si canta truco
+                    if (bandera_truco == 1) {
+                        break;
+                    }
+                }
                 carta_jugador = turno_jugador();
             }
 
@@ -142,12 +146,12 @@ void juego() {
         
         // Actualiza los puntos totales de la ronda
         if (punto_mano_jugador > punto_mano_computadora) {
-            puntos_jugador = puntos_truco();
+            puntos_jugador += puntos_truco();
             printf("\n* El jugador gana la ronda\n");
         } else if (punto_mano_computadora > punto_mano_jugador) {
-            puntos_computadora = puntos_truco();
+            puntos_computadora += puntos_truco();
             printf("\n* La computadora gana la ronda\n");
-        } else if (punto_mano_jugador == punto_mano_computadora && bandera_truco == 1) {
+        } else if (punto_mano_jugador == punto_mano_computadora && bandera_truco != 1) {
             printf("\n* Empate en la ronda\n");
         }
 
@@ -156,24 +160,28 @@ void juego() {
         printf("Puntos del jugador: %d\n", puntos_jugador);
         printf("Puntos de la computadora: %d\n", puntos_computadora);
 
+        // Analiza si ya se han llegado a los 15 puntos
+        if (puntos_jugador >= 15) {
+            printf("\nEl jugador ha ganado la partida\n");
+            break;
+        } else if (puntos_computadora >= 15) {
+            printf("\nLa computadora ha ganado la partida.\n");
+            break;
+        }
+
         reiniciar_baraja();
         printf("\n-------------------------");
-        printf("\n------ Nueva Ronda ------\n");
+        printf("\n-----Ronda actual:%d -----\n",rondas_jugadas+1);
         printf("-------------------------\n");
 
+        // Reiniciar valores de variables
+        bandera_truco = 0;
+        bandera_puntos = 0;
+        rondas_jugadas++;
+
+            // Muestra el resultado final del juego
+        
         repartir();
-
-        // Se reinicia el valor de las banderas
-        bandera_truco = 0; 
-        bandera_truco_compu = 0; 
-        bandera_truco_jugador = 0;
-    }
-
-    // Muestra el resultado final del juego
-    if (puntos_jugador >= 15) {
-        printf("\n¡El jugador ha ganado la partida!\n");
-    } else {
-        printf("\nLa computadora ha ganado la partida.\n");
     }
 }
 
@@ -214,7 +222,6 @@ int evitar_doble_carta_computadora() {
 
 // Realiza el turno del jugador, mostrando y marcando la carta seleccionada como usada
 int turno_jugador() {
-
     // El jugador elige una carta de su mano para jugar
     int carta_tirada;
     printf("\nElija una carta (1, 2 o 3): ");
@@ -236,7 +243,7 @@ int turno_computadora() {
     int carta_computadora = evitar_doble_carta_computadora();
     int carta = mano_computadora[carta_computadora];
     mano_computadora[carta_computadora] = -1;
-    printf("Carta de la computadora: ");
+    printf("\nCarta de la computadora: ");
     mostrar_carta(carta);
 
     return carta;
@@ -273,169 +280,173 @@ int validar_canto(int cantar) {
     return cantar;
 }
 
-//* Se canta truco
-void cantar_truco_jugador(){
+//! Cuando el jugador canta truco
+void cantar_truco_jugador() {
     int cantar_truco;
-    if (bandera_truco == 0) { // No se debe haber cantado truco antes
         printf("\nQueres cantar truco? (1: No, 2: Si): ");
         scanf("%d", &cantar_truco);
         cantar_truco = validar_canto(cantar_truco);
 
-        if (cantar_truco == 2) {
-            printf("\n- player: TRUCO\n");
-            bandera_truco = 1;
-        }
+    if (cantar_truco == 2) {
+        printf("\n- player: TRUCO\n");
+        bandera_truco = 2; // Se ha cantado truco
+        respuesta_truco_compu(); // La computadora responde
+        if (bandera_truco == 1) { // Si la computadora no quiere truco se termina la mano
+            puntos_jugador++;
+        } else if (bandera_truco == 3) { // La compu responde con retruco
+            respuesta_retruco_jugador(); // El jugador responde
+            if (bandera_truco == 1) { // Si no quiere retruco
+                puntos_computadora += 2;
+            } else if (bandera_truco == 4){ // Si quiere vale 4
+                respuesta_valeCuatro_compu(); // La compu responde
+                if (bandera_truco == 1) {
+                    puntos_jugador += 3;
+                }
+            }
+        }   
     } 
 }
 
-void cantar_truco_computadora() {
+void respuesta_truco_compu() {
+    int respuesta_compu;
+
+    respuesta_compu = rand() % 3;
+
+    if (respuesta_compu == 0) {
+        printf("\n- compu: NO QUIERO\n");
+        bandera_truco = 1; // Se termina el juego y el jugador gana 1 punto
+    } else if (respuesta_compu == 1) {
+        printf("\n- compu: QUIERO\n");
+        bandera_truco = 2; // Se sigue jugando pero ahora por 2 puntos
+        bandera_puntos = 2;
+    } else {
+        printf("\n- compu: QUIERO RETRUCO\n");
+        bandera_truco = 3; // Se sigue jugando pero ahora por 3 puntos
+        bandera_puntos = 3;
+    } 
+}
+
+void respuesta_retruco_jugador() {
+    int responder_retruco;
+    printf("\nRespuestas: (1: No quiero, 2: Quiero, 3: Vale cuatro): ");
+    scanf("%d", &responder_retruco);
+
+    if (responder_retruco == 1) {
+        printf("\n- player: NO QUIERO\n");
+        bandera_truco = 1;
+    } else if (responder_retruco == 2) {
+        printf("\n- player: QUIERO\n");
+        bandera_puntos = 3;
+    } else if (responder_retruco == 3) {
+        printf("\n- player: VALE CUATRO\n");
+        bandera_truco = 4;
+    }
+}
+
+void respuesta_valeCuatro_compu(){
+    int responder_valeCuatro;
+
+    responder_valeCuatro = rand() % 2;
+        if (responder_valeCuatro == 0) {
+            printf("\n- compu: NO QUIERO\n");
+            bandera_truco = 1;
+        } else {
+            printf("\n- compu: QUIERO\n");
+            bandera_truco = 4;
+            bandera_puntos = 4;
+        }  
+}
+
+//! Cuando la compu canta truco
+void cantar_truco_compu() {
     int cantar_truco;
     cantar_truco = rand() % 2; // 0: no quire, 1: quiere
 
     // La compu solo canta si no se ha cantado truco antes
-    if (cantar_truco == 1 && bandera_truco == 0) {
+    if (cantar_truco == 1) {
         printf("\n- computadora: TRUCO\n");
-        bandera_truco = 1;
-    }
-}
-
-//* Se responde al truco
-int respuesta_truco_compu(){ 
-    int respuesta_compu;
-
-    if (bandera_truco == 1) { // El jugador canta truco
-        respuesta_compu = rand() % 3 + 1; // La compu elige una carta random para responder
-
-        if (respuesta_compu == 1) {
-            printf("\n- compu: NO QUIERO\n");
-            bandera_truco_compu = 0; 
-        } else if (respuesta_compu == 2) {
-            printf("\n- compu: QUIERO\n");
-            bandera_truco_compu = 1;
-        } else {
-            printf("\n- compu: RETRUCO?\n");
-            bandera_truco_compu = 2;
+        respuesta_truco_jugador(); // El jugador responde a la compu el truco
+        if (bandera_truco == 1) {  // Si el jugador no quiere
+            puntos_computadora++;
+        } else if (bandera_truco == 3) { // El jugador quiere retruco
+            respuesta_retruco_compu(); // 
+            if (bandera_truco == 1) { // Si la compu no quiere
+                puntos_jugador += 2;
+            } else if (bandera_truco == 4){ // Si la compu quiere vale cuatro
+                respuesta_valeCuatro_jugador(); // 
+                if (bandera_truco == 1) { // Si el jugador no quiere
+                    puntos_computadora += 3;
+                }
+            }
         }
     }
-    return respuesta_compu;
 }
 
-int respuesta_truco_jugador(){
+void respuesta_truco_jugador(){
     int respuesta_jugador;
 
-    if (bandera_truco == 1) { // Se canto truco
-        printf("\nRespuestas (1: No quiero, 2: Quiero, 3: Retruco): "); // Responder al truco de la compu
-        scanf("%d", &respuesta_jugador);
+    printf("\nRespuestas (1: No quiero, 2: Quiero, 3: Retruco): "); // Responder al truco de la compu
+    scanf("%d", &respuesta_jugador);
 
-        if (respuesta_jugador == 1) {
-            printf("\n- player: NO QUIERO\n");
-            bandera_truco_jugador = 0;
-        } else if (respuesta_jugador == 2) {
-            printf("\n- player: QUIERO\n");
-            bandera_truco = 2; // Indica que estamos en el truco, se juegan por 2 puntos
-            bandera_truco_jugador = 1;
-        } else if (respuesta_jugador == 3) {
-            printf("\n- player: RETRUCO!\n");
-            bandera_truco_jugador = 2;
-        }
+    if (respuesta_jugador == 1) {
+        printf("\n- player: NO QUIERO\n");
+        bandera_truco = 1;
+    } else if (respuesta_jugador == 2) {
+        printf("\n- player: QUIERO\n");
+        bandera_puntos = 2;
+        bandera_truco = 2; // Indica que estamos en el truco, se juegan por 2 puntos
+    } else if (respuesta_jugador == 3) {
+        printf("\n- player: QUIERO RETRUCO\n");
+        bandera_truco = 3;
+        bandera_puntos = 3;
     }
-    return 0; 
 }
 
-//* Se responde al retruco
-int respuesta_retruco_jugador() {
+void respuesta_retruco_compu() {
     int responder_retruco;
-    if (bandera_truco_compu == 2) {
-        printf("\nRespuestas: (1: No quiero, 2: Quiero, 3: Vale cuatro): ");
-        scanf("%d", &responder_retruco);
-
-        if (responder_retruco == 1) {
-            printf("\n- player: NO QUIERO\n");
-            bandera_truco_jugador = 0;
-        } else if (responder_retruco == 2) {
-            printf("\n- player: QUIERO\n");
-            bandera_truco_jugador = 1;
-            bandera_truco = 3; // Indica que estamos en retruco, se juegan por 3 puntos
-        } else if (responder_retruco == 3) {
-            printf("\n- player: VALE CUATRO\n");
-            bandera_truco_jugador = 2;
-        }
+    responder_retruco = rand() % 3;
+    if (responder_retruco == 1) {
+        printf("\n- compu: NO QUIERO\n");
+        bandera_truco = 1;
+    } else if (responder_retruco == 2) {
+        printf("\n- compu: QUIERO\n");
+        bandera_puntos = 3;
+    } else if (responder_retruco == 3) {
+        printf("\n- compu: VALE CUATRO\n");
+        bandera_truco = 4;
     }
-    return responder_retruco;
 }
 
-int respuesta_retruco_compu() {
-    int responder_retruco;
-    responder_retruco = rand() % 3+1;
-    if (bandera_truco_jugador == 2) {
-        if (responder_retruco == 1) {
-            printf("\n- compu: NO QUIERO\n");
-            bandera_truco_compu = 0;
-        } else if (responder_retruco == 2) {
-            printf("\n- compu: QUIERO\n");
-            bandera_truco_compu = 1;
-            bandera_truco = 3; // Indica que estamos en retruco, se juegan por 3 puntos
-        } else if (responder_retruco == 3) {
-            printf("\n- compu: VALE CUATRO\n");
-            bandera_truco_compu = 3;
-        }
-    }
-    return responder_retruco;
-}
-
-//* Se responde al vale 4
-int respuesta_valeCuatro_compu(){
+void respuesta_valeCuatro_jugador() {
     int responder_valeCuatro;
 
-    responder_valeCuatro = rand() % 2+1;
-    if (bandera_truco_jugador == 2) {
-        if (responder_valeCuatro == 1) {
-            printf("\n- compu: NO QUIERO\n");
-            bandera_truco_compu = 0;
-        } else {
-            printf("\n- compu: QUIERO\n");
-            bandera_truco_compu = 1;
-            bandera_truco = 4; // Indica que estamos en vale cuatro, se juegan por 4 puntos
-        }
+    printf("\nRespuestas: (1: No quiero, 2: Quiero): ");
+    scanf("%d", &responder_valeCuatro);
+
+    if (responder_valeCuatro == 1) {
+        printf("\n- player: NO QUIERO\n");
+        bandera_truco = 1;
+    } else if (responder_valeCuatro == 2) {
+        printf("\n- player: QUIERO\n");
+        bandera_puntos = 4;
+        bandera_puntos = 4;
     }
-    return responder_valeCuatro;    
 }
 
-int respuesta_valeCuatro_jugador() {
-    int responder_valeCuatro;
-
-    if (bandera_truco_compu == 2) {
-        printf("\nRespuestas: (1: No quiero, 2: Quiero, 3: Vale cuatro): ");
-        scanf("%d", &responder_valeCuatro);
-
-        if (responder_valeCuatro == 1) {
-            printf("\n- player: NO QUIERO\n");
-            bandera_truco_jugador = 0;
-        } else if (responder_valeCuatro == 2) {
-            printf("\n- player: QUIERO\n");
-            bandera_truco_jugador = 1;
-            bandera_truco = 3; // Indica que estamos en retruco, se juegan por 3 puntos
-        } else if (responder_valeCuatro == 3) {
-            printf("\n- player: VALE CUATRO\n");
-            bandera_truco_jugador = 2;
-        }
-    }
-    return responder_valeCuatro;
-}
-
+// Se asigna el punto dependiendo de en que instancia del truco se este
 int puntos_truco() {
     int puntos;
-    switch (bandera_truco) {
-    case 1: // Estan en truco
+    switch (bandera_puntos) {
+    case 0:
         puntos = 1;
         break;
-    case 2:
+    case 2: // Se dijo quiero al truco
         puntos = 2;
         break;
-    case 3:
+    case 3: // Se dijo quiero al retruco
         puntos = 3;
         break;
-    case 4:
+    case 4: // Se dijo quiero al vale cuatro
         puntos = 4;
         break;
     }
